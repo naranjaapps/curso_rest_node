@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { dbConnection } = require('../database/config')
 
 class Server{
 
@@ -7,11 +8,17 @@ class Server{
         this.app = express();
         this.port = process.env.PORT;
         this.usersApi = '/api/usuarios';
+        this.sunarpApi = '/api/sunarp';
         //middlewares
 
+        this.databaseConnect();
         this.middlewares();
         this.routes();
 
+    }
+
+    async databaseConnect(){
+        await dbConnection();
     }
 
     middlewares(){
@@ -26,6 +33,7 @@ class Server{
     routes(){
 
         this.app.use(this.usersApi, require('../routes/user.route'));
+        this.app.use(this.sunarpApi, require('../routes/sunarp.route'));
      
     }
 

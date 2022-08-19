@@ -1,4 +1,8 @@
 const {response, request} = require('express');
+const puppeteer = require('puppeteer');
+const Usuario = require('../models/user');
+const bcryptjs = require('bcryptjs');
+const { validationResult } = require('express-validator');
 
 const usersGet = (req = request, res=response) => {
 
@@ -20,13 +24,36 @@ const usersGet = (req = request, res=response) => {
     });
   }
  
-  const usersPost = (req, res=response) => {
-    const {license_plate} = req.body;
+   const usersPost = async (req, res=response) => {
+    const errors = validationResult(req);
 
-    res.json({
+    if (!errors.isEmpty()){
+        return res.status(400).json(errors);
+    }
+
+    const {nombre, correo, contrasena, rol} = req.body;
+    const usuario = new Usuario({nombre, correo, contrasena, rol});
+
+    //verificar correo
+    const existeEmail = Usuario.findOne({correo});
+    if (existeEmail) {
+
+      return res.status(400).json({  
+        msg : 'El correo ya existe',
+    });
+
+       
+    }
+
+    //encriptar
+    const salt = bcryptjs.genSaltSync(10);
+    usuario.contrasena = bcryptjs.hashSync(contrasena, salt);
+
+    await usuario.save();
+
+    res.json({  
         msg : 'POST  api - Controlador',
-        license_plate : license_plate
-
+        usuario : usuario
     });
   }
 
